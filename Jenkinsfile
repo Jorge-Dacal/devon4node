@@ -9,6 +9,7 @@ pipeline{
 
     tools {
         nodejs "NodeJS-10.15.3"
+        oc "OpenShiftv3.11.0"
     }
 
     environment {
@@ -69,8 +70,6 @@ pipeline{
                }
             }
             steps {
-                
-                def openshift = tool name: "${params.OPENSHIFT_TOOL}", type: 'oc'
                 script {
                     if (env.BRANCH_NAME.startsWith('release')) {
                         dockerTag = "release"
