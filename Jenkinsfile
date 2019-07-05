@@ -8,7 +8,7 @@ pipeline{
     }
 
     tools {
-        nodejs "NodeJS 10.14.0"
+        nodejs "NodeJS-10.15.3"
     }
 
     environment {
@@ -76,21 +76,21 @@ pipeline{
                     if (env.BRANCH_NAME.startsWith('release')) {
                         dockerTag = "release"
                         repositoryName = 'maven-releases'
-                        dockerEnvironment = "_uat"
+                        dockerEnvironment = "-uat"
                         sonarProjectKey = '-release'
                     }
 
                     if (env.BRANCH_NAME == 'develop') {
                         dockerTag = "latest"
                         repositoryName = 'maven-snapshots'
-                        dockerEnvironment = "_dev"
+                        dockerEnvironment = "-dev"
                         sonarProjectKey = '-develop'
                     }
 
                     if (env.BRANCH_NAME == 'master') {
                         dockerTag = "production"
                         repositoryName = 'maven-releases'
-                        dockerEnvironment = '_prod'
+                        dockerEnvironment = '-prod'
                         sonarProjectKey = ''
                         
                     }
@@ -262,10 +262,10 @@ pipeline{
                         withCredentials([usernamePassword(credentialsId: "${openShiftCredentials}", passwordVariable: 'pass', usernameVariable: 'user')]) {
                             sh "oc login -u ${user} -p ${pass} ${openshiftUrl} --insecure-skip-tls-verify"
                             try {
-                                sh "oc start-build ${props.name} --namespace=${openShiftNamespace} --from-dir=. --wait"
+                                sh "oc start-build ${props.name}${dockerEnvironment} --namespace=${openShiftNamespace} --from-dir=. --wait"
                             } catch (e) {
                                 sh """
-                                    oc logs \$(oc get builds -l build=${props.name} --namespace=${openShiftNamespace} --sort-by=.metadata.creationTimestamp -o name | tail -n 1) --namespace=${namespace}
+                                    oc logs \$(oc get builds -l build=${props.name}${dockerEnvironment} --namespace=${openShiftNamespace} --sort-by=.metadata.creationTimestamp -o name | tail -n 1) --namespace=${namespace}
                                     throw e
                                 """
                             }
@@ -291,7 +291,7 @@ pipeline{
                             sh "oc import-image ${props.name}:${dockerTag} --namespace=${openShiftNamespace} --from=${dockerRegistry}/${props.name}:${dockerTag} --confirm"
                         } catch (e) {
                             sh """
-                                oc logs \$(oc get builds -l build=${props.name} --namespace=${openShiftNamespace} --sort-by=.metadata.creationTimestamp -o name | tail -n 1) --namespace=${openShiftNamespace}
+                                oc logs \$(oc get builds -l build=${props.name}${dockerEnvironment} --namespace=${openShiftNamespace} --sort-by=.metadata.creationTimestamp -o name | tail -n 1) --namespace=${openShiftNamespace}
                                 throw e
                             """
                         }
@@ -318,7 +318,7 @@ pipeline{
                         def oldRetry = -1;
                         def oldState = "";
                         
-                        sh "oc get pods -l app=${props.name} > out"
+                        sh "oc get pods -l app=${props.name}${dockerEnvironment} > out"
                         def status = sh (
                             script: "sed 's/[\t ][\t ]*/ /g' < out | sed '2q;d' | cut -d' ' -f3",
                             returnStdout: true
@@ -334,7 +334,7 @@ pipeline{
                             oldRetry = retry
                             oldState = status
                             
-                            sh """oc get pods -l app=${props.name} > out"""
+                            sh """oc get pods -l app=${props.name}${dockerEnvironment} > out"""
                             status = sh (
                                 script: "sed 's/[\t ][\t ]*/ /g' < out | sed '2q;d' | cut -d' ' -f3",
                                 returnStdout: true
@@ -348,7 +348,7 @@ pipeline{
                         
                         if(status != "Running"){
                             try {
-                                sh """oc logs \$(oc get pods -l app=${props.name} --sort-by=.metadata.creationTimestamp -o name | tail -n 1)"""
+                                sh """oc logs \$(oc get pods -l app=${props.name}${dockerEnvironment} --sort-by=.metadata.creationTimestamp -o name | tail -n 1)"""
                             } catch (e) {
                                 sh "echo error reading logs"
                             }
