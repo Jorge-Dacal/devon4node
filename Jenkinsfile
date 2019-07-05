@@ -25,7 +25,7 @@ pipeline{
         // Name of the sonarQube tool
         sonarTool = 'SonarQube-scanner'
         // Name of the sonarQube environment
-        sonarEnv = "SonarQube"
+        sonarEnv = "SharesSonar"
 
         // Nexus
         // Artifact groupId
