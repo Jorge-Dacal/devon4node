@@ -51,7 +51,7 @@ pipeline{
         
         // Openshift
         openshiftUrl = 'https://ocp.itaas.s2-eu.capgemini.com'
-        openShiftCredentials = 'openshift'
+        openShiftCredentials = 'ocadmin'
         openShiftNamespace = 's2portaldev'
         
     }
