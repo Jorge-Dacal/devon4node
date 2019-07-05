@@ -70,7 +70,7 @@ pipeline{
             }
             steps {
                 
-
+                def openshift = tool name: "${params.OPENSHIFT_TOOL}", type: 'oc'
                 script {
                     if (env.BRANCH_NAME.startsWith('release')) {
                         dockerTag = "release"
